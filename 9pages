@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;min-height:100vh;font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei','Heiti TC',sans-serif;}
+
+.phone{width:min(340px,90vw);aspect-ratio:9/16;background:#1a1240;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 8px 48px rgba(0,0,0,0.7);border:2px solid #2a2a3a;flex-shrink:0;}
+
+.progress-bar{position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,#ff6b6b,#ffd93d);z-index:100;width:0%;}
+
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(16px,4vw,28px) clamp(14px,3.5vw,24px) 56px;opacity:0;transition:opacity 0.45s ease;pointer-events:none;overflow:hidden;}
+.scene.active{opacity:1;pointer-events:all;}
+
+.watermark{position:absolute;top:12px;right:12px;font-size:9px;color:rgba(255,255,255,0.45);font-weight:600;letter-spacing:0.5px;z-index:50;}
+.watermark span{color:#ff6b6b;}
+
+.scene-dots{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:3px;z-index:50;}
+.dot{width:16px;height:2.5px;border-radius:2px;background:rgba(255,255,255,0.25);}
+.dot.done{background:rgba(255,255,255,0.8);}
+.dot.active-dot{background:#ffd93d;}
+
+.subtitle-bar{position:absolute;bottom:12px;left:10px;right:10px;background:rgba(0,0,0,0.72);border-radius:7px;padding:6px 10px;font-size:10px;color:#fff;text-align:center;line-height:1.5;backdrop-filter:blur(4px);}
+
+.bg-dark{background:linear-gradient(155deg,#1a1240 0%,#2d1b69 100%);}
+.bg-red{background:linear-gradient(155deg,#3d0a0a 0%,#6b1111 100%);}
+.bg-green{background:linear-gradient(155deg,#0a2d1a 0%,#0f4a2a 100%);}
+.bg-amber{background:linear-gradient(155deg,#2d1a00 0%,#4a2e00 100%);}
+.bg-crisis{background:linear-gradient(155deg,#1a0a2d 0%,#2d0a3d 60%,#3d0a0a 100%);}
+
+.label{font-size:9px;font-weight:700;letter-spacing:1.4px;color:#ffd93d;margin-bottom:5px;text-transform:uppercase;}
+.scene-title{font-size:clamp(16px,4.5vw,22px);font-weight:900;color:#fff;text-align:center;line-height:1.3;margin-bottom:10px;}
+.sub-text{font-size:clamp(11px,3vw,13px);color:rgba(255,255,255,0.7);text-align:center;line-height:1.7;}
+.body-text{font-size:clamp(11px,2.8vw,13px);color:rgba(255,255,255,0.88);line-height:1.8;text-align:left;width:100%;}
+.hl{color:#ffd93d;font-weight:700;}
+.hl-r{color:#ff6b6b;font-weight:700;}
+.hl-g{color:#6bffb8;font-weight:700;}
+
+.card{background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:9px 12px;margin-bottom:7px;width:100%;}
+.card-t{font-size:11px;font-weight:700;color:#ffd93d;margin-bottom:3px;}
+.card-b{font-size:11px;color:rgba(255,255,255,0.8);line-height:1.6;}
+
+.quote-box{background:rgba(255,107,107,0.13);border-left:3px solid #ff6b6b;border-radius:0 8px 8px 0;padding:8px 12px;margin:6px 0;width:100%;}
+.quote-t{font-size:11px;color:rgba(255,255,255,0.9);line-height:1.7;font-style:italic;}
+.quote-a{font-size:9px;color:#ff6b6b;margin-top:3px;}
+
+.critique-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:6px;}
+.critique-item{background:rgba(255,255,255,0.07);border:1px solid rgba(255,107,107,0.28);border-radius:9px;padding:8px;}
+.critique-title{font-size:10px;font-weight:700;color:#ff6b6b;margin-bottom:2px;}
+.critique-desc{font-size:9px;color:rgba(255,255,255,0.68);line-height:1.45;}
+
+.stat-row{width:100%;margin-bottom:12px;}
+.stat-label{font-size:10px;color:rgba(255,255,255,0.7);margin-bottom:4px;}
+.stat-bar-bg{width:100%;height:9px;background:rgba(255,255,255,0.13);border-radius:5px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:5px;width:0%;transition:width 1.4s ease;}
+
+.badge-row{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:7px 0;}
+.badge{font-size:10px;padding:4px 9px;border-radius:18px;font-weight:700;}
+.b-purple{background:#7c3aed;color:#fff;}
+.b-teal{background:#0d9488;color:#fff;}
+.b-amber{background:#d97706;color:#fff;}
+
+.cta-big{font-size:clamp(15px,4vw,20px);font-weight:900;color:#ffd93d;text-align:center;line-height:1.35;margin:8px 0 4px;}
+.cta-sub{font-size:11px;color:rgba(255,255,255,0.65);text-align:center;line-height:1.7;}
+
+.two-cond{display:flex;gap:5px;width:100%;margin-bottom:8px;}
+.cond-box{flex:1;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:8px 6px;text-align:center;}
+.cond-num{font-size:18px;color:#ffd93d;}
+.cond-label{font-size:10px;font-weight:700;color:#fff;margin-top:2px;line-height:1.4;}
+.cond-op{display:flex;align-items:center;color:rgba(255,255,255,0.35);font-size:13px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.82);}to{opacity:1;transform:scale(1);}}
+@keyframes scaleTilt{0%{transform:rotate(0deg);}50%{transform:rotate(-11deg);}100%{transform:rotate(0deg);}}
+@keyframes scaleBalance{from{transform:rotate(-11deg);}to{transform:rotate(0deg);}}
+
+.a-fu{animation:fadeUp 0.55s ease forwards;}
+.a-si{animation:scaleIn 0.45s ease forwards;}
+.d1{animation-delay:.25s;opacity:0;}
+.d2{animation-delay:.5s;opacity:0;}
+.d3{animation-delay:.75s;opacity:0;}
+.d4{animation-delay:1s;opacity:0;}
+.d5{animation-delay:1.25s;opacity:0;}
+
+.scale-tilt{animation:scaleTilt 2.2s ease-in-out infinite;}
+.scale-bal{animation:scaleBalance 1s ease .7s forwards;transform:rotate(-11deg);}
+
+.controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center;}
+.btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:inherit;font-size:11px;padding:7px 14px;border-radius:18px;cursor:pointer;transition:all 0.2s;}
+.btn:hover{background:rgba(255,255,255,0.2);}
+.btn-play{background:#ffd93d;color:#1a1240;border-color:#ffd93d;font-weight:700;}
+.btn-play:hover{background:#ffe566;}
+.scene-count{font-size:11px;color:rgba(255,255,255,0.5);}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="progress-bar" id="pBar"></div>
+  <div class="scene-dots" id="sDots"></div>
+  <div class="watermark">@<span>acsvaw</span></div>
+
+  <!-- S1: HOOK -->
+  <div class="scene bg-dark" id="s0">
+    <div class="scene-title a-fu">誤會對方同意<br>性侵罪就不成立？</div>
+    <svg class="scale-tilt" viewBox="0 0 220 130" style="width:min(200px,56vw);height:auto;margin:4px auto 10px;" xmlns="http://www.w3.org/2000/svg">
+      <line x1="110" y1="18" x2="110" y2="82" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+      <circle cx="110" cy="18" r="4" fill="#ffd93d"/>
+      <line x1="30" y1="52" x2="190" y2="72" stroke="#ffd93d" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="30" y1="52" x2="30" y2="74" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <rect x="8" y="74" width="44" height="22" rx="4" fill="rgba(107,255,184,0.18)" stroke="#6bffb8" stroke-width="1"/>
+      <text x="30" y="83" text-anchor="middle" font-family="sans-serif" font-size="6.5" fill="#6bffb8" font-weight="700">受害人</text>
+      <text x="30" y="92" text-anchor="middle" font-family="sans-serif" font-size="6" fill="#6bffb8">我無同意過</text>
+      <line x1="190" y1="72" x2="190" y2="100" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <rect x="168" y="100" width="44" height="22" rx="4" fill="rgba(255,107,107,0.22)" stroke="#ff6b6b" stroke-width="1"/>
+      <text x="190" y="109" text-anchor="middle" font-family="sans-serif" font-size="6.5" fill="#ff6b6b" font-weight="700">被告</text>
+      <text x="190" y="118" text-anchor="middle" font-family="sans-serif" font-size="6" fill="#ff6b6b">誤會你同意</text>
+      <text x="142" y="44" font-family="sans-serif" font-size="8.5" fill="#ffd93d" font-weight="900">你個嘢斜咗呀！</text>
+    </svg>
+    <div class="sub-text a-fu d1">從經典案例及「摩根原則」說起</div>
+    <div class="sub-text a-fu d2" style="font-size:10px;margin-top:3px;">一宗1973年的案件，令香港至今仍可用<br>不合理的「誤會」為性侵抗辯</div>
+    <div class="subtitle-bar">誤會對方同意，性侵罪就不成立？</div>
+  </div>
+
+  <!-- S2: BACKGROUND -->
+  <div class="scene bg-dark" id="s1">
+    <div class="label a-fu">1973年 · 英國</div>
+    <div class="scene-title a-fu d1" style="font-size:clamp(17px,4.8vw,21px);">英國空軍<br>軍官性侵案</div>
+    <div class="sub-text a-fu d1" style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:10px;">DPP v Morgan [1976]</div>
+    <div class="card a-fu d2"><div class="card-t">人物</div><div class="card-b">空軍高級軍官 <span class="hl">威廉摩根</span>、三名初級軍官、<span class="hl-r">摩根太太（事主）</span></div></div>
+    <div class="card a-fu d3"><div class="card-t">起因</div><div class="card-b">摩根與三名下屬飲酒，席間<span class="hl-r">提議眾人到他家與其妻子性交</span></div></div>
+    <div class="quote-box a-fu d4">
+      <div class="quote-t">「我太太喜歡喺性行為時假裝抵抗，掙扎時其實係享受。」</div>
+      <div class="quote-a">— 摩根</div>
+    </div>
+    <div class="subtitle-bar">英國空軍軍官性侵案（1973年）</div>
+  </div>
+
+  <!-- S3: ASSAULT -->
+  <div class="scene bg-crisis" id="s2">
+    <div class="label a-fu" style="color:#ff6b6b;">案發經過</div>
+    <div class="body-text a-fu d1">四人前往摩根家，<span class="hl-r">將熟睡中的摩根太太拖出睡房，輪流與其性交。</span></div>
+    <div style="height:8px;"></div>
+    <div class="body-text a-fu d2">事主<span class="hl">掙扎呼救</span>，但被四人掩口及壓制。</div>
+    <div style="height:8px;"></div>
+    <div class="body-text a-fu d3">事後，事主<span class="hl-g">馬上前往醫院報稱遭強姦。</span></div>
+    <div style="height:10px;"></div>
+    <div class="card a-fu d4" style="background:rgba(255,107,107,0.11);border-color:rgba(255,107,107,0.38);">
+      <div class="card-t" style="color:#ff6b6b;">控罪</div>
+      <div class="card-b">三名初級軍官被控<span class="hl-r">強姦罪</span><br>四人另被控<span class="hl-r">協助和教唆強姦罪</span><br><span style="font-size:9.5px;color:rgba(255,255,255,0.45);">（當時婚姻意味性義務，摩根本人沒被控強姦）</span></div>
+    </div>
+    <div class="subtitle-bar">事主掙扎呼救，事後即赴醫院報案</div>
+  </div>
+
+  <!-- S4: VERDICT & APPEAL -->
+  <div class="scene bg-dark" id="s3">
+    <div class="label a-fu">庭審 → 上訴</div>
+    <div class="body-text a-fu d1" style="margin-bottom:8px;">庭上，三名初級軍官稱事主<span class="hl">同意並享受</span>性行為。</div>
+    <div class="two-cond a-fu d2">
+      <div class="cond-box"><div class="cond-num">①</div><div class="cond-label">真誠相信<br>事主同意</div></div>
+      <div class="cond-op">+</div>
+      <div class="cond-box"><div class="cond-num">②</div><div class="cond-label">信念<br>係合理</div></div>
+    </div>
+    <div class="body-text a-fu d3" style="margin-bottom:7px;">陪審團：供詞「<span class="hl-r">謊話連篇</span>」，<span class="hl-g">四人全部罪成</span>。</div>
+    <div class="card a-fu d4" style="background:rgba(255,107,107,0.11);border-color:rgba(255,107,107,0.45);">
+      <div class="card-t" style="color:#ff6b6b;">但係——上訴！</div>
+      <div class="card-b">上議院以 <span class="hl-r">3:2</span> 推翻條件②<br>裁定：<span class="hl-r">只要真誠相信，毋須合理</span><br>強姦罪即不成立</div>
+    </div>
+    <div class="subtitle-bar">「摩根原則」從此確立</div>
+  </div>
+
+  <!-- S5: MORGAN PRINCIPLE -->
+  <div class="scene bg-red" id="s4">
+    <div class="label a-fu" style="color:#ffd93d;">確立先例</div>
+    <div class="scene-title a-fu d1" style="font-size:clamp(17px,4.5vw,20px);margin-bottom:8px;">「摩根原則」</div>
+    <div class="card a-fu d2" style="background:rgba(255,107,107,0.18);border-color:#ff6b6b;text-align:center;padding:11px;">
+      <div class="card-b" style="font-size:12px;line-height:1.9;color:#fff;">被告只要<span class="hl">真誠相信</span>對方同意<br>就等於沒有犯罪意圖<br><span style="font-size:9px;opacity:.5;">mens rea</span><br>強姦罪即<span class="hl-r">不成立</span> · <span class="hl">毋須合理理由</span></div>
+    </div>
+    <div class="critique-grid a-fu d3">
+      <div class="critique-item"><div class="critique-title">太主觀！</div><div class="critique-desc">堅稱誤會即可，容易產生抵賴</div></div>
+      <div class="critique-item"><div class="critique-title">對受害人不公！</div><div class="critique-desc">被告主觀凌駕受害人意願</div></div>
+      <div class="critique-item"><div class="critique-title">標準不一！</div><div class="critique-desc">其他刑案均需合理，性侵獨例外</div></div>
+      <div class="critique-item"><div class="critique-title">鼓吹迷思！</div><div class="critique-desc">審訊變成檢討受害人言行</div></div>
+    </div>
+    <div class="subtitle-bar">「有如強姦者的特許狀」— Jennifer Temkin 法律教授</div>
+  </div>
+
+  <!-- S6: CONSEQUENCES -->
+  <div class="scene bg-amber" id="s5">
+    <div class="label a-fu" style="color:#ffd93d;">惡果連連</div>
+    <div class="scene-title a-fu d1" style="font-size:clamp(14px,4vw,17px);margin-bottom:9px;">「摩根原則」成為<br><span class="hl-r">性侵案被告的逃生門</span></div>
+    <div class="card a-fu d2" style="margin-bottom:5px;"><div class="card-t" style="font-size:9.5px;">Regina v. Cogan [1976]</div><div class="card-b" style="font-size:10.5px;">醉漢強姦案被告援引「摩根原則」——<span class="hl-r">成功脫罪</span></div></div>
+    <div class="card a-fu d3" style="margin-bottom:9px;"><div class="card-t" style="font-size:9.5px;">Regina v. Satnam (1983)</div><div class="card-b" style="font-size:10.5px;">強姦13歲女童案，依「摩根原則」——<span class="hl-r">被告最終脫罪</span></div></div>
+    <div class="stat-row a-fu d4">
+      <div class="stat-label">1977年：每3宗報案，1宗定罪</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="b77" style="background:#6bffb8;"></div></div>
+    </div>
+    <div class="stat-row a-fu d5">
+      <div class="stat-label">2002年：每20宗報案，1宗定罪</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="b02" style="background:#ff6b6b;"></div></div>
+    </div>
+    <div class="subtitle-bar">以上例子只是冰山一角……</div>
+  </div>
+
+  <!-- S7: UK REFORM -->
+  <div class="scene bg-green" id="s6">
+    <div class="label a-fu" style="color:#6bffb8;">英國改革</div>
+    <div class="scene-title a-fu d1" style="font-size:clamp(16px,4.5vw,19px);margin-bottom:9px;">「摩根原則」<br>在英國<span class="hl-g">壽終正寢</span></div>
+    <div class="card a-fu d2" style="background:rgba(107,255,184,0.1);border-color:rgba(107,255,184,0.35);text-align:center;margin-bottom:8px;"><div class="card-b" style="font-size:13px;font-weight:700;color:#6bffb8;">2003年英國改革性罪行法例</div><div class="card-b" style="font-size:11px;margin-top:3px;">信念必須<span class="hl">客觀合理</span>方可成辯解</div></div>
+    <div class="card a-fu d3" style="background:rgba(255,107,107,0.11);border-color:rgba(255,107,107,0.38);"><div class="card-t" style="color:#ff6b6b;">但係喺香港——</div><div class="card-b">本港性罪行法例於<span class="hl-r">1970年代</span>以英格蘭法例為藍本，至今仍沿用<span class="hl-r">1956年版本</span></div></div>
+    <div class="card a-fu d4" style="background:rgba(255,107,107,0.18);border-color:#ff6b6b;text-align:center;margin-top:4px;"><div class="card-b" style="font-size:13px;font-weight:900;color:#ff6b6b;">「摩根原則」在香港仍然適用</div></div>
+    <div class="subtitle-bar">英國已改革，但香港法例仍未更新</div>
+  </div>
+
+  <!-- S8: HK CASE -->
+  <div class="scene bg-crisis" id="s7">
+    <div class="label a-fu" style="color:#ff6b6b;">本港案例</div>
+    <div class="scene-title a-fu d1" style="font-size:clamp(14px,4vw,17px);margin-bottom:8px;">冒認女同志性侵案<br><span style="font-size:10px;color:rgba(255,255,255,0.45);">HKSAR v. Tsang Tsz Ho (2021)</span></div>
+    <div class="body-text a-fu d2" style="font-size:11px;margin-bottom:7px;">男子在女同志交友程式以 <span class="hl">TB 身份</span>結識女事主，刻意隱瞞性別，<span class="hl-r">在未獲同意下以陽具與事主性交。</span></div>
+    <div class="card a-fu d3" style="margin-bottom:6px;"><div class="card-t">被告抗辯「誤會對方同意」</div><div class="card-b" style="font-size:10.5px;">· 不知道程式是女同志專屬，填「TB」係「亂咁㩒」<br>· 被叫「姐姐」無否認，係理解成「哥哥姐姐」<br>· 事主無提及不喜歡男性</div></div>
+    <div class="card a-fu d4" style="background:rgba(255,107,107,0.18);border-color:#ff6b6b;text-align:center;"><div class="card-b" style="font-size:12px;font-weight:700;color:#ff6b6b;">陪審團裁定：非禮及強姦罪均不成立</div></div>
+    <div class="subtitle-bar">「誤信同意」令受害人得不到保護</div>
+  </div>
+
+  <!-- S9: REFORM CTA -->
+  <div class="scene bg-dark" id="s8">
+    <div class="label a-fu" style="color:#6bffb8;">立法改革倡議</div>
+    <div class="scene-title a-fu d1" style="font-size:clamp(14px,4vw,17px);margin-bottom:6px;">政府承諾<span class="hl-g"> 2027 年前</span><br>完成性罪行改革</div>
+    <svg viewBox="0 0 220 90" style="width:min(190px,52vw);height:auto;margin:4px auto 6px;" class="scale-bal" xmlns="http://www.w3.org/2000/svg">
+      <line x1="110" y1="10" x2="110" y2="58" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+      <circle cx="110" cy="10" r="4" fill="#ffd93d"/>
+      <line x1="30" y1="48" x2="190" y2="48" stroke="#ffd93d" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="30" y1="48" x2="30" y2="64" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <rect x="7" y="64" width="46" height="18" rx="4" fill="rgba(124,58,237,0.28)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="30" y="76" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#c4b5fd" font-weight="700">主觀（真誠）</text>
+      <line x1="190" y1="48" x2="190" y2="64" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <rect x="167" y="64" width="46" height="18" rx="4" fill="rgba(13,148,136,0.28)" stroke="#2dd4bf" stroke-width="1"/>
+      <text x="190" y="76" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#5eead4" font-weight="700">客觀（合理）</text>
+      <text x="110" y="88" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#ffd93d" font-weight="700">取得平衡！</text>
+    </svg>
+    <div class="body-text a-fu d2" style="font-size:10.5px;margin-bottom:5px;">協會建議新增清晰指引：</div>
+    <div class="badge-row a-fu d3">
+      <span class="badge b-purple">訂立「同意」法定定義</span>
+      <span class="badge b-teal">列明同意無效清單</span>
+      <span class="badge b-amber">信念須客觀合理</span>
+    </div>
+    <div class="cta-big a-fu d4" style="font-size:clamp(14px,3.8vw,18px);">不要再讓荒謬的「誤會」<br>成為性侵的藉口</div>
+  </div>
+
+</div><!-- end phone -->
+
+<div class="controls">
+  <button class="btn" onclick="go(-1)">◀ 上一幕</button>
+  <span class="scene-count" id="sCount">1 / 9</span>
+  <button class="btn btn-play" id="playBtn" onclick="togglePlay()">▶ 播放</button>
+  <button class="btn" onclick="go(1)">下一幕 ▶</button>
+</div>
+
+<script>
+(function(){
+  var DUR=[8000,12000,15000,17000,20000,13000,13000,15000,12000];
+  var N=DUR.length, cur=0, playing=false, timer=null;
+
+  // build dots
+  var dotsEl=document.getElementById('sDots');
+  for(var i=0;i<N;i++){var d=document.createElement('div');d.className='dot';d.id='d'+i;dotsEl.appendChild(d);}
+
+  function showScene(idx){
+    for(var i=0;i<N;i++){
+      var s=document.getElementById('s'+i);
+      s.classList.remove('active');
+      // reset animations by cloning children
+      var els=s.querySelectorAll('[class]');
+      els.forEach(function(el){
+        if(el.style){el.style.animation='none';void el.offsetWidth;el.style.animation='';}
+      });
+      var dot=document.getElementById('d'+i);
+      dot.className='dot'+(i<idx?' done':i===idx?' active-dot':'');
+    }
+    document.getElementById('s'+idx).classList.add('active');
+    document.getElementById('sCount').textContent=(idx+1)+' / '+N;
+
+    // stat bars
+    if(idx===5){
+      setTimeout(function(){
+        var b1=document.getElementById('b77'),b2=document.getElementById('b02');
+        if(b1){b1.style.transition='width 1.3s ease';b1.style.width='33%';}
+        if(b2){b2.style.transition='width 1.5s ease .5s';b2.style.width='5%';}
+      },700);
+    }
+  }
+
+  function startProg(dur){
+    var bar=document.getElementById('pBar');
+    bar.style.transition='none';bar.style.width='0%';
+    void bar.offsetWidth;
+    bar.style.transition='width '+dur+'ms linear';
+    bar.style.width='100%';
+  }
+
+  function schedNext(){
+    clearTimeout(timer);
+    timer=setTimeout(function(){
+      if(cur<N-1){cur++;showScene(cur);startProg(DUR[cur]);schedNext();}
+      else{playing=false;document.getElementById('playBtn').textContent='▶ 重新播放';}
+    },DUR[cur]);
+  }
+
+  window.go=function(dir){
+    cur=Math.max(0,Math.min(N-1,cur+dir));
+    showScene(cur);
+    if(playing){clearTimeout(timer);startProg(DUR[cur]);schedNext();}
+  };
+
+  window.togglePlay=function(){
+    var btn=document.getElementById('playBtn');
+    if(!playing){
+      playing=true;btn.textContent='⏸ 暫停';
+      if(cur===N-1)cur=0;
+      showScene(cur);startProg(DUR[cur]);schedNext();
+    } else {
+      playing=false;clearTimeout(timer);btn.textContent='▶ 繼續播放';
+    }
+  };
+
+  showScene(0);
+})();
+</script>
+</body>
+</html>
