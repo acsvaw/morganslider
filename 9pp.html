@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;min-height:100vh;font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei','Heiti TC',sans-serif;}
+body{background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei','Heiti TC',sans-serif;}
 
-.phone{width:min(340px,90vw);aspect-ratio:9/16;background:#1a1240;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 8px 48px rgba(0,0,0,0.7);border:2px solid #2a2a3a;flex-shrink:0;}
+.phone{width:min(340px,90vw);aspect-ratio:9/16;background:#1a1240;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 8px 48px rgba(0,0,0,0.4);border:2px solid #2a2a3a;flex-shrink:0;}
 
 .progress-bar{position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,#ff6b6b,#ffd93d);z-index:100;width:0%;}
 
@@ -22,7 +22,7 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;justi
 .dot.done{background:rgba(255,255,255,0.8);}
 .dot.active-dot{background:#ffd93d;}
 
-.subtitle-bar{position:absolute;bottom:12px;left:10px;right:10px;background:rgba(0,0,0,0.72);border-radius:7px;padding:6px 10px;font-size:10px;color:#fff;text-align:center;line-height:1.5;backdrop-filter:blur(4px);}
+.subtitle-bar{position:absolute;bottom:12px;left:10px;right:10px;background:rgba(0,0,0,0.72);border-radius:7px;padding:6px 10px;font-size:10px;color:#fff;text-align:center;line-height:1.5;}
 
 .bg-dark{background:linear-gradient(155deg,#1a1240 0%,#2d1b69 100%);}
 .bg-red{background:linear-gradient(155deg,#3d0a0a 0%,#6b1111 100%);}
@@ -88,11 +88,11 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;justi
 .scale-bal{animation:scaleBalance 1s ease .7s forwards;transform:rotate(-11deg);}
 
 .controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center;}
-.btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:inherit;font-size:11px;padding:7px 14px;border-radius:18px;cursor:pointer;transition:all 0.2s;}
-.btn:hover{background:rgba(255,255,255,0.2);}
-.btn-play{background:#ffd93d;color:#1a1240;border-color:#ffd93d;font-weight:700;}
-.btn-play:hover{background:#ffe566;}
-.scene-count{font-size:11px;color:rgba(255,255,255,0.5);}
+.btn{background:rgba(0,0,0,0.07);border:1px solid rgba(0,0,0,0.14);color:#444;font-family:inherit;font-size:11px;padding:7px 14px;border-radius:18px;cursor:pointer;transition:all 0.2s;}
+.btn:hover{background:rgba(0,0,0,0.13);}
+.btn-play{background:#1a1240;color:#ffd93d;border-color:#1a1240;font-weight:700;}
+.btn-play:hover{background:#2d1b69;}
+.scene-count{font-size:11px;color:#888;}
 </style>
 </head>
 <body>
@@ -263,7 +263,6 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;justi
   var DUR=[8000,12000,15000,17000,20000,13000,13000,15000,12000];
   var N=DUR.length, cur=0, playing=false, timer=null;
 
-  // build dots
   var dotsEl=document.getElementById('sDots');
   for(var i=0;i<N;i++){var d=document.createElement('div');d.className='dot';d.id='d'+i;dotsEl.appendChild(d);}
 
@@ -271,7 +270,6 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;justi
     for(var i=0;i<N;i++){
       var s=document.getElementById('s'+i);
       s.classList.remove('active');
-      // reset animations by cloning children
       var els=s.querySelectorAll('[class]');
       els.forEach(function(el){
         if(el.style){el.style.animation='none';void el.offsetWidth;el.style.animation='';}
@@ -281,8 +279,6 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;justi
     }
     document.getElementById('s'+idx).classList.add('active');
     document.getElementById('sCount').textContent=(idx+1)+' / '+N;
-
-    // stat bars
     if(idx===5){
       setTimeout(function(){
         var b1=document.getElementById('b77'),b2=document.getElementById('b02');
